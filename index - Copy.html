@@ -1,0 +1,2410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>E-Sports Tournament Matchmaking System | 3 Core Modules</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       DARK GAMING THEME: NEON BLUE (#00f0ff), PURPLE (#a855f7), GREEN (#10b981)
+       ========================================================================== */
+    :root {
+      --bg-primary: #070913;
+      --bg-surface: #0e1224;
+      --bg-surface-elevated: #151a33;
+      --bg-glass: rgba(14, 18, 36, 0.85);
+      --border-glass: rgba(168, 85, 247, 0.25);
+      --border-cyan: rgba(0, 240, 255, 0.3);
+      
+      --neon-cyan: #00f0ff;
+      --neon-cyan-glow: rgba(0, 240, 255, 0.45);
+      --neon-purple: #a855f7;
+      --neon-purple-glow: rgba(168, 85, 247, 0.45);
+      --neon-green: #10b981;
+      --neon-red: #ef4444;
+      --neon-gold: #fbbf24;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      
+      --font-heading: 'Rajdhani', -apple-system, sans-serif;
+      --font-body: 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, monospace;
+      
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-full: 9999px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(0, 240, 255, 0.10) 0%, transparent 45%),
+        linear-gradient(to bottom, #070913 0%, #0c1020 100%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      font-size: 14px;
+      line-height: 1.5;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated Cyber Grid */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-surface-elevated); border-radius: 4px; border: 1px solid var(--border-glass); }
+    ::-webkit-scrollbar-thumb:hover { background: var(--neon-purple); }
+
+    .app-wrapper {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 16px 24px 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ================= HEADER / TOP HUD ================= */
+    .top-header {
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 18px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+
+    .brand-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--neon-purple), var(--neon-cyan));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      box-shadow: 0 0 20px var(--neon-purple-glow);
+    }
+
+    .brand-text h1 {
+      font-family: var(--font-heading);
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #fff, var(--neon-cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-text .sub {
+      font-size: 0.8rem;
+      color: var(--neon-purple);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* ================= BUTTONS ================= */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--neon-purple), #7c3aed);
+      color: #fff;
+      box-shadow: 0 0 15px var(--neon-purple-glow);
+    }
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #c084fc, var(--neon-purple));
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.7);
+    }
+
+    .btn-cyan {
+      background: linear-gradient(135deg, #00f0ff, #0284c7);
+      color: #050814;
+      font-weight: 700;
+      box-shadow: 0 0 15px var(--neon-cyan-glow);
+    }
+    .btn-cyan:hover {
+      background: linear-gradient(135deg, #7dd3fc, #00f0ff);
+      box-shadow: 0 0 25px rgba(0, 240, 255, 0.7);
+    }
+
+    .btn-green {
+      background: linear-gradient(135deg, var(--neon-green), #059669);
+      color: #04100b;
+      font-weight: 700;
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    }
+    .btn-green:hover {
+      background: linear-gradient(135deg, #34d399, var(--neon-green));
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.7);
+    }
+
+    .btn-secondary {
+      background: var(--bg-surface-elevated);
+      color: var(--text-main);
+      border-color: rgba(255,255,255,0.1);
+    }
+    .btn-secondary:hover {
+      border-color: var(--neon-purple);
+      color: #fff;
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--neon-red);
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover {
+      background: var(--neon-red);
+      color: #fff;
+    }
+
+    .btn-sm { padding: 5px 12px; font-size: 0.78rem; }
+
+    /* ================= STATS BAR ================= */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .stat-pill {
+      background: var(--bg-surface);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .stat-pill:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-glass);
+    }
+
+    .stat-pill .icon {
+      font-size: 24px;
+      width: 42px;
+      height: 42px;
+      background: var(--bg-surface-elevated);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stat-pill .val {
+      font-family: var(--font-heading);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .stat-pill .lbl {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ================= 3 MODULE TABS NAVIGATION ================= */
+    .module-nav-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 8px;
+      margin-bottom: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .module-tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 14px 18px;
+      border-radius: var(--radius-md);
+      font-family: var(--font-heading);
+      font-size: 1.1rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+
+    .module-tab-btn:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .module-tab-btn.active {
+      color: #070913;
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+    }
+
+    .module-tab-btn.tab-1.active {
+      background: linear-gradient(135deg, var(--neon-cyan), #38bdf8);
+      box-shadow: 0 0 25px var(--neon-cyan-glow);
+    }
+    .module-tab-btn.tab-2.active {
+      background: linear-gradient(135deg, var(--neon-purple), #c084fc);
+      color: #fff;
+      box-shadow: 0 0 25px var(--neon-purple-glow);
+    }
+    .module-tab-btn.tab-3.active {
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      color: #070913;
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.5);
+    }
+
+    .tab-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      background: rgba(0, 0, 0, 0.3);
+      font-weight: 700;
+    }
+
+    /* ================= MODULE CONTAINERS ================= */
+    .module-view {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .module-view.active { display: block; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Panels & Cards */
+    .panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .panel-header h2 {
+      font-family: var(--font-heading);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .code-pill {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid var(--neon-purple);
+      color: var(--neon-purple);
+    }
+    .code-pill.cyan {
+      background: rgba(0, 240, 255, 0.15);
+      border-color: var(--neon-cyan);
+      color: var(--neon-cyan);
+    }
+    .code-pill.green {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--neon-green);
+      color: var(--neon-green);
+    }
+
+    /* Form Controls */
+    .form-group { margin-bottom: 12px; }
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      color: #fff;
+      font-family: var(--font-body);
+      font-size: 0.86rem;
+      transition: all 0.2s ease;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 10px var(--neon-cyan-glow);
+    }
+
+    /* Tables */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+    th {
+      background: var(--bg-surface-elevated);
+      padding: 12px 14px;
+      color: var(--text-muted);
+      font-family: var(--font-heading);
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: middle;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Avatar Selector */
+    .avatar-picker {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .avatar-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .avatar-btn:hover { transform: scale(1.1); border-color: var(--neon-cyan); }
+    .avatar-btn.selected {
+      border-color: var(--neon-cyan);
+      background: rgba(0, 240, 255, 0.2);
+      box-shadow: 0 0 10px var(--neon-cyan-glow);
+    }
+
+    /* ================= MODULE 1: FIFO QUEUE PIPELINE ================= */
+    .queue-track-container {
+      background: #050711;
+      border: 2px dashed rgba(0, 240, 255, 0.3);
+      border-radius: var(--radius-md);
+      padding: 20px;
+      margin: 16px 0;
+      position: relative;
+    }
+
+    .queue-track-header {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .pointer-front { color: var(--neon-green); }
+    .pointer-rear { color: var(--neon-purple); }
+
+    .queue-track {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding: 10px 4px 16px;
+      min-height: 130px;
+      align-items: center;
+    }
+
+    .queue-card {
+      background: var(--bg-surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      min-width: 170px;
+      position: relative;
+      flex-shrink: 0;
+      animation: slideIn 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(30px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .queue-card.is-front {
+      border-color: var(--neon-green);
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+    .queue-card.is-rear {
+      border-color: var(--neon-purple);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+    }
+
+    .queue-pos-badge {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      margin-bottom: 6px;
+    }
+
+    .queue-card .tag {
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+    .queue-card .meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .queue-card .wait-time {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-gold);
+      margin-top: 6px;
+    }
+
+    .queue-arrow {
+      font-size: 20px;
+      color: rgba(255,255,255,0.25);
+      flex-shrink: 0;
+    }
+
+    /* ================= MODULE 2: MAX-HEAP TREE & ARRAY ================= */
+    .heap-svg-canvas {
+      width: 100%;
+      height: 380px;
+      background: #050711;
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: var(--radius-md);
+      display: block;
+      margin: 16px 0;
+    }
+
+    .array-strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 12px 6px;
+      background: var(--bg-surface-elevated);
+      border-radius: var(--radius-sm);
+      margin-top: 10px;
+    }
+
+    .array-cell {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      text-align: center;
+      min-width: 100px;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .array-cell:hover, .array-cell.highlight {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 15px var(--neon-cyan-glow);
+      transform: translateY(-2px);
+    }
+    .array-cell .idx {
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-subtle);
+    }
+    .array-cell .val {
+      font-weight: 700;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+    .array-cell .score {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--neon-purple);
+      font-weight: 700;
+    }
+
+    .trace-log-panel {
+      max-height: 160px;
+      overflow-y: auto;
+      background: #050711;
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .trace-item {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+    .trace-item.swap {
+      color: var(--neon-cyan);
+      font-weight: 600;
+    }
+
+    /* ================= MODULE 3: BRACKETS & LEADERBOARD ================= */
+    .bracket-container {
+      display: flex;
+      gap: 24px;
+      overflow-x: auto;
+      padding: 20px 10px;
+      align-items: center;
+    }
+
+    .bracket-col {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 200px;
+    }
+    .bracket-round-title {
+      font-family: var(--font-heading);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--neon-cyan);
+      text-transform: uppercase;
+      text-align: center;
+      margin-bottom: -10px;
+    }
+
+    .match-node {
+      background: var(--bg-surface-elevated);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      transition: all 0.2s ease;
+    }
+    .match-node.ready {
+      border-color: var(--neon-cyan);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.25);
+    }
+    .match-node.completed {
+      border-color: rgba(16, 185, 129, 0.5);
+    }
+
+    .bracket-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 0;
+      font-size: 0.84rem;
+    }
+    .bracket-row.winner {
+      color: var(--neon-green);
+      font-weight: 700;
+    }
+
+    /* Podium */
+    .podium-container {
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      gap: 16px;
+      margin: 20px 0 30px;
+      flex-wrap: wrap;
+    }
+    .podium-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 200px;
+    }
+    .podium-card {
+      width: 100%;
+      background: var(--bg-surface);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    .podium-card.rank-1 {
+      border: 2px solid var(--neon-gold);
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.4);
+      order: 2;
+    }
+    .podium-card.rank-2 {
+      border: 2px solid #94a3b8;
+      order: 1;
+    }
+    .podium-card.rank-3 {
+      border: 2px solid #b45309;
+      order: 3;
+    }
+
+    .podium-step {
+      width: 100%;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+    .step-1 { height: 50px; background: rgba(251, 191, 36, 0.2); border-top: 2px solid var(--neon-gold); color: var(--neon-gold); }
+    .step-2 { height: 36px; background: rgba(148, 163, 184, 0.2); border-top: 2px solid #94a3b8; color: #94a3b8; }
+    .step-3 { height: 26px; background: rgba(180, 83, 9, 0.2); border-top: 2px solid #b45309; color: #b45309; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-dialog {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      max-width: 600px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      overflow: hidden;
+      animation: modalPop 0.25s ease;
+    }
+    @keyframes modalPop {
+      from { transform: scale(0.92); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-family: var(--font-heading); font-size: 1.25rem; color: #fff; }
+    .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-glass);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: var(--radius-sm);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      animation: slideInRight 0.3s ease;
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .module-nav-container { grid-template-columns: 1fr; }
+      .podium-container { flex-direction: column; align-items: center; }
+      .podium-card.rank-1, .podium-card.rank-2, .podium-card.rank-3 { order: unset; width: 100%; max-width: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ================= TOP HEADER HUD ================= -->
+  <header class="top-header">
+    <div class="brand-title-wrap">
+      <div class="brand-icon">⚡</div>
+      <div class="brand-text">
+        <h1>E-SPORTS TOURNAMENT MATCHMAKING SYSTEM</h1>
+        <div class="sub">DATA STRUCTURES CAPSTONE: FIFO QUEUE & BINARY MAX-HEAP ENGINE</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary btn-sm" id="btnSoundToggle">🔊 Sound ON</button>
+      <button class="btn btn-cyan btn-sm" id="btnSeedAthletes">⚡ Load 16 Athletes</button>
+      <button class="btn btn-primary btn-sm" onclick="openModal('modalViva')">🎓 Viva Voce Guide</button>
+      <button class="btn btn-danger btn-sm" id="btnResetAll" title="Reset system data">🔄 Reset</button>
+    </div>
+  </header>
+
+  <!-- ================= STATS BAR ================= -->
+  <div class="stats-bar">
+    <div class="stat-pill">
+      <div class="icon">👥</div>
+      <div>
+        <div class="val" id="statAthletesCount">0</div>
+        <div class="lbl">Total Registered</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="color: var(--neon-cyan);">⏳</div>
+      <div>
+        <div class="val" id="statQueueCount">0</div>
+        <div class="lbl">FIFO Queue (M1)</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="color: var(--neon-purple);">🌲</div>
+      <div>
+        <div class="val" id="statHeapCount">0</div>
+        <div class="lbl">Max-Heap Pool (M2)</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="color: var(--neon-green);">⚔️</div>
+      <div>
+        <div class="val" id="statMatchesCount">0</div>
+        <div class="lbl">Matches Played (M3)</div>
+      </div>
+    </div>
+    <div class="stat-pill">
+      <div class="icon" style="color: var(--neon-gold);">👑</div>
+      <div>
+        <div class="val" style="color: var(--neon-gold); font-size: 1.15rem;" id="statTopPlayer">None</div>
+        <div class="lbl">Top Ranked (#1)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 3 MODULE TABS ================= -->
+  <nav class="module-nav-container">
+    <button class="module-tab-btn tab-1 active" onclick="showModule(1)">
+      <span>⏳ MODULE 1: FIFO Queue Matchmaking</span>
+      <span class="tab-badge" id="navBadgeQueue">0</span>
+    </button>
+    <button class="module-tab-btn tab-2" onclick="showModule(2)">
+      <span>🌲 MODULE 2: Max-Heap Priority Matchmaker</span>
+      <span class="tab-badge" id="navBadgeHeap">0</span>
+    </button>
+    <button class="module-tab-btn tab-3" onclick="showModule(3)">
+      <span>🏆 MODULE 3: Tournaments & Elo Leaderboard</span>
+      <span class="tab-badge" id="navBadgeTourney">Live</span>
+    </button>
+  </nav>
+
+  <!-- =========================================================================
+       MODULE 1: FIFO QUEUE MATCHMAKING (ARRIVAL-TIME FAIRNESS)
+       ========================================================================= -->
+  <div class="module-view active" id="module-1">
+    
+    <!-- Top Action Banner -->
+    <div style="background: linear-gradient(90deg, rgba(0, 240, 255, 0.12), rgba(14, 18, 36, 0.8)); border: 1px solid var(--border-cyan); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <strong style="color: var(--neon-cyan); font-family: var(--font-heading); font-size: 1.1rem;">MODULE 1: FIRST-IN-FIRST-OUT (FIFO) QUEUE</strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+          Guarantees arrival-time fairness for casual & unranked lobbies. Time Complexity: <strong>Enqueue O(1)</strong> &bull; <strong>Dequeue O(1)</strong>.
+        </p>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <button class="btn btn-cyan btn-sm" id="btnQuickEnqueue4">+ Enqueue 4 Athletes</button>
+        <button class="btn btn-green btn-sm" id="btnFifoMatch1v1">⚔️ Pair Front 2 (FIFO Match)</button>
+        <button class="btn btn-danger btn-sm" id="btnClearQueue">Clear Queue</button>
+      </div>
+    </div>
+
+    <!-- Visual FIFO Track -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>⏳ Visual FIFO Queue Track</h2>
+        <span class="code-pill cyan">O(1) HEAD & REAR POINTERS</span>
+      </div>
+
+      <div class="queue-track-container">
+        <div class="queue-track-header">
+          <span class="pointer-front">⬅️ FRONT (Head) • Matched First</span>
+          <span class="pointer-rear">REAR (Tail) • Newly Arrived ➡️</span>
+        </div>
+        <div class="queue-track" id="queueTrack">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 14px;">
+        <button class="btn btn-secondary btn-sm" id="btnDequeueHead">⬆️ Dequeue Front (Pop Head)</button>
+        <span style="font-size: 0.8rem; color: var(--text-subtle);">Oldest waiting athlete at the front is matched first without starvation.</span>
+      </div>
+    </div>
+
+    <!-- 2 Column: Registration + Athlete Table -->
+    <div style="display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start;">
+      
+      <!-- Player Registration Form -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>📝 Register Athlete</h2>
+          <span class="code-pill">NEW PLAYER</span>
+        </div>
+        <form id="formRegisterAthlete">
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <label>Player ID *</label>
+              <button type="button" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.7rem;" id="btnAutoGenId">⚡ Auto-Gen</button>
+            </div>
+            <input type="text" class="form-control" id="regPlayerId" placeholder="e.g. PLY-1017" required>
+          </div>
+          <div class="form-group">
+            <label>Athlete Name *</label>
+            <input type="text" class="form-control" id="regName" placeholder="e.g. Tyson Ngo" required>
+          </div>
+          <div class="form-group">
+            <label>Gamer Tag / Handle *</label>
+            <input type="text" class="form-control" id="regTag" placeholder="e.g. TenZ" required minlength="3">
+          </div>
+          <div class="form-group">
+            <label>Email Address *</label>
+            <input type="email" class="form-control" id="regEmail" placeholder="e.g. tenz@esports.gg" required>
+          </div>
+          <div class="form-group">
+            <label>Game Title *</label>
+            <select class="form-control" id="regGame">
+              <option value="Valorant">Valorant</option>
+              <option value="CS2">CS2</option>
+              <option value="BGMI">BGMI</option>
+              <option value="Apex">Apex Legends</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <div style="display: flex; justify-content: space-between;">
+              <label>Skill Rating (MMR) *</label>
+              <span id="regMmrDisplay" class="code-pill cyan">1600</span>
+            </div>
+            <input type="range" class="form-control" id="regMmr" min="500" max="3200" step="25" value="1600" style="padding: 0; margin-top: 4px;">
+          </div>
+          <div class="form-group">
+            <label>Select Avatar Icon</label>
+            <div class="avatar-picker" id="regAvatarPicker">
+              <div class="avatar-btn selected" data-avatar="🥷">🥷</div>
+              <div class="avatar-btn" data-avatar="🎖️">🎖️</div>
+              <div class="avatar-btn" data-avatar="🧙">🧙</div>
+              <div class="avatar-btn" data-avatar="🤖">🤖</div>
+              <div class="avatar-btn" data-avatar="🎯">🎯</div>
+              <div class="avatar-btn" data-avatar="⚡">⚡</div>
+              <div class="avatar-btn" data-avatar="💀">💀</div>
+              <div class="avatar-btn" data-avatar="🦅">🦅</div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 8px;">
+            🎮 Register & Add to FIFO Queue
+          </button>
+        </form>
+      </div>
+
+      <!-- Registered Athletes Directory -->
+      <div class="panel">
+        <div class="panel-header">
+          <h2>👥 Registered Athlete Directory</h2>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" class="form-control" id="searchAthleteInput" placeholder="🔍 Search ID, Name..." style="width: 180px; padding: 6px 10px;">
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Player ID</th>
+                <th>Athlete</th>
+                <th>Game</th>
+                <th>Skill Rating</th>
+                <th>Record</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="athleteTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       MODULE 2: BINARY MAX-HEAP PRIORITY MATCHMAKER
+       ========================================================================= -->
+  <div class="module-view" id="module-2">
+    
+    <!-- Formula & Control Banner -->
+    <div style="background: linear-gradient(90deg, rgba(168, 85, 247, 0.15), rgba(14, 18, 36, 0.8)); border: 1px solid var(--border-glass); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <strong style="color: var(--neon-purple); font-family: var(--font-heading); font-size: 1.1rem;">MODULE 2: BINARY MAX-HEAP PRIORITY QUEUE</strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); font-family: var(--font-mono); margin-top: 2px;">
+          Formula: <code>Priority = Skill Rating (MMR) + (Wait Time &times; 1.5)</code> &bull; Starvation Prevention
+        </p>
+      </div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-primary btn-sm" id="btnExtractMax">⭐ Extract-Max (Root)</button>
+        <button class="btn btn-green btn-sm" id="btnHeapMatchTop2">⚔️ Match Top 2 Players</button>
+        <button class="btn btn-secondary btn-sm" id="btnRebuildHeap">🔄 O(n) Floyd Heapify</button>
+        <button class="btn btn-danger btn-sm" id="btnClearHeap">Clear Heap</button>
+      </div>
+    </div>
+
+    <!-- Tree Visualizer & Array -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🌲 Interactive Binary Max-Heap Tree Visualizer</h2>
+        <span class="code-pill purple">O(log n) INSERT & EXTRACT</span>
+      </div>
+      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px;">
+        Every parent node satisfies <code>Priority(Parent) &ge; Priority(Children)</code>. Root always holds the highest priority player.
+      </p>
+
+      <!-- SVG Tree -->
+      <svg class="heap-svg-canvas" id="heapSvgCanvas"></svg>
+
+      <!-- Array Representation Strip -->
+      <div style="margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h4 style="font-family: var(--font-heading); color: #fff; font-size: 0.95rem;">
+            Contiguous Array Storage: <code>A[0 ... n-1]</code>
+          </h4>
+          <span style="font-size: 0.72rem; color: var(--text-subtle); font-family: var(--font-mono);">
+            Parent = (i-1)//2 | Left = 2i+1 | Right = 2i+2
+          </span>
+        </div>
+        <div class="array-strip" id="heapArrayStrip">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Heap Actions: Insert & Delete -->
+      <div style="display: flex; gap: 16px; align-items: center; margin-top: 18px; flex-wrap: wrap; background: var(--bg-surface-elevated); padding: 12px 16px; border-radius: var(--radius-sm);">
+        <label style="font-weight: 600; font-size: 0.82rem; color: var(--text-muted);">INSERT INTO HEAP:</label>
+        <select class="form-control" id="selectInsertHeap" style="max-width: 240px;">
+          <!-- Populated -->
+        </select>
+        <button class="btn btn-primary btn-sm" id="btnDoInsertHeap">+ Insert Athlete (Heapify-Up)</button>
+
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.1); margin: 0 4px;"></div>
+
+        <label style="font-weight: 600; font-size: 0.82rem; color: var(--text-muted);">DELETE FROM HEAP:</label>
+        <select class="form-control" id="selectDeleteHeap" style="max-width: 220px;">
+          <!-- Populated -->
+        </select>
+        <button class="btn btn-danger btn-sm" id="btnDoDeleteHeap">🗑️ Delete Selected</button>
+      </div>
+
+      <!-- Swap Trace Log -->
+      <div style="margin-top: 18px;">
+        <h4 style="font-family: var(--font-heading); color: #fff; font-size: 0.95rem; margin-bottom: 6px;">
+          📋 Step-by-Step Heapify Swap Log
+        </h4>
+        <div class="trace-log-panel" id="heapTraceLog">
+          <div style="color: var(--text-subtle);">No operations recorded yet. Insert, Extract, or Rebuild the heap to inspect swaps.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- =========================================================================
+       MODULE 3: TOURNAMENT BRACKET & ELO LEADERBOARD
+       ========================================================================= -->
+  <div class="module-view" id="module-3">
+    
+    <!-- Top Action Banner -->
+    <div style="background: linear-gradient(90deg, rgba(251, 191, 36, 0.15), rgba(14, 18, 36, 0.8)); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: var(--radius-md); padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <strong style="color: var(--neon-gold); font-family: var(--font-heading); font-size: 1.1rem;">MODULE 3: TOURNAMENTS & ELO LEADERBOARD</strong>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 2px;">
+          Knockout tournament generation, Arpad Elo rating recalculation (K=32), and dynamic top 3 podium.
+        </p>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button class="btn btn-primary btn-sm" id="btnGenTournament">🏆 Generate 8-Player Tournament</button>
+        <button class="btn btn-cyan btn-sm" id="btnSimulateTournament">⚡ Simulate Entire Tournament</button>
+      </div>
+    </div>
+
+    <!-- Active 1v1 Matches Arena -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>⚔️ Competitive Match Arena (Active Duels)</h2>
+        <span class="code-pill green">ELO ADJUSTMENT ENGINE</span>
+      </div>
+      <div id="activeMatchesGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+        <!-- Dynamically rendered -->
+      </div>
+    </div>
+
+    <!-- Knockout Tournament Bracket -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🏆 Single-Elimination Knockout Bracket</h2>
+        <span id="tourneyStatusBadge" class="code-pill cyan">ACTIVE CHAMPIONSHIP</span>
+      </div>
+
+      <div class="bracket-container" id="bracketContainer">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Top 3 Podium & Leaderboard Table -->
+    <div class="panel">
+      <div class="panel-header">
+        <h2>🏅 Global Competitive Elo Leaderboard</h2>
+        <div style="display: flex; gap: 8px;">
+          <select class="form-control" id="filterLeaderboardGame" style="width: 140px; padding: 6px 10px;">
+            <option value="ALL">All Games</option>
+            <option value="Valorant">Valorant</option>
+            <option value="CS2">CS2</option>
+            <option value="BGMI">BGMI</option>
+            <option value="Apex">Apex</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Top 3 Podium -->
+      <div class="podium-container" id="leaderboardPodium">
+        <!-- Rendered dynamically: 2nd, 1st, 3rd -->
+      </div>
+
+      <!-- Leaderboard Table -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Athlete</th>
+              <th>Game</th>
+              <th>Rank Tier</th>
+              <th>Skill Rating (MMR)</th>
+              <th>Matches</th>
+              <th>Win Rate</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboardBody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= MODAL: VIVA VOCE CHEAT SHEET ================= -->
+<div class="modal-overlay" id="modalViva">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>🎓 B.Tech Project Defense & Viva Voce Q&A</h3>
+      <button class="btn btn-secondary btn-sm" onclick="closeModal('modalViva')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--neon-cyan);">
+          <strong style="color: #fff;">Q1: Why use a Binary Max-Heap instead of a Sorted Array for Priority Matchmaking?</strong>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+            A sorted array requires <strong>O(n)</strong> time for every insert because elements must shift. A Max-Heap achieves <strong>O(log n)</strong> insertions and <strong>O(log n)</strong> extractions using array arithmetic without pointer overhead.
+          </p>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--neon-purple);">
+          <strong style="color: #fff;">Q2: How does the priority formula prevent player starvation in the heap?</strong>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+            <code>Priority = Skill Rating (MMR) + (Wait Time &times; 1.5)</code>. As average-tier players wait longer, their priority score continuously increases, guaranteeing they bubble up toward the root to be matched.
+          </p>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--neon-green);">
+          <strong style="color: #fff;">Q3: Where is FIFO Queue used versus Priority Heap in real games?</strong>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+            FIFO queues are used for casual/unranked matchmaking and server login queues (strictly arrival-based). Heaps are used for competitive ranked modes and tournament seeding (skill-based).
+          </p>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid var(--neon-gold);">
+          <strong style="color: #fff;">Q4: What are the array indexing formulas for a complete binary heap?</strong>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+            For node at index <code>i</code>: <strong>Parent = (i-1)//2</strong>, <strong>Left Child = 2i+1</strong>, <strong>Right Child = 2i+2</strong>.
+          </p>
+        </div>
+        <div style="background: var(--bg-surface-elevated); padding: 14px; border-radius: var(--radius-sm); border-left: 3px solid #38bdf8);">
+          <strong style="color: #fff;">Q5: How does the Arpad Elo rating system work?</strong>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-top: 4px;">
+            Expected win probability is <code>E_A = 1 / (1 + 10^((R_B - R_A)/400))</code>. Rating adjustment is <code>&Delta;R = K &times; (Actual - Expected)</code> with K=32. Underdogs gain large Elo bonuses when defeating top players.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalViva')">Close Guide</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- =========================================================================
+     JAVASCRIPT: PURE, CLEAN, SELF-CONTAINED & 100% FUNCTIONAL
+     ========================================================================= -->
+<script>
+/**
+ * E-SPORTS TOURNAMENT MATCHMAKING SYSTEM
+ * 3-MODULE CORE ARCHITECTURE:
+ * 1. FIFO Queue: Arrival-time fairness (O(1) Enqueue & Dequeue)
+ * 2. Binary Max-Heap: Priority matchmaking (O(log n) Insert & Extract-Max)
+ * 3. Tournament Bracket & Elo Leaderboard: Knockout tree & Elo math (K=32)
+ */
+
+// ==========================================
+// AUDIO SYNTHESIZER (Web Audio API)
+// ==========================================
+let soundEnabled = true;
+class SoundFX {
+  constructor() { this.ctx = null; }
+  init() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AC();
+    }
+  }
+  playBeep(freq = 440, type = 'sine', duration = 0.1) {
+    if (!soundEnabled) return;
+    try {
+      this.init();
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start();
+      osc.stop(this.ctx.currentTime + duration);
+    } catch(e) {}
+  }
+  playSuccess() {
+    this.playBeep(523, 'triangle', 0.08);
+    setTimeout(() => this.playBeep(659, 'triangle', 0.12), 90);
+  }
+  playSwap() {
+    this.playBeep(350, 'square', 0.06);
+    setTimeout(() => this.playBeep(450, 'square', 0.06), 60);
+  }
+  playVictory() {
+    [523, 659, 783, 1046].forEach((f, i) => {
+      setTimeout(() => this.playBeep(f, 'sawtooth', 0.25), i * 120);
+    });
+  }
+}
+const sfx = new SoundFX();
+
+// ==========================================
+// TOAST NOTIFICATIONS
+// ==========================================
+function showToast(msg, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  const icon = type === 'success' ? '✅' : (type === 'error' ? '⚠️' : 'ℹ️');
+  toast.innerHTML = `<span>${icon}</span><div>${msg}</div>`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'all 0.3s ease';
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
+
+// Modal Helpers
+function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+
+// Tab Switcher
+let currentModule = 1;
+function showModule(modNum) {
+  currentModule = modNum;
+  document.querySelectorAll('.module-tab-btn').forEach((b, i) => {
+    b.classList.toggle('active', i + 1 === modNum);
+  });
+  document.querySelectorAll('.module-view').forEach((v, i) => {
+    v.classList.toggle('active', i + 1 === modNum);
+  });
+  sfx.playBeep(480, 'sine', 0.05);
+}
+
+// ==========================================
+// CORE DATA: ATHLETES DATABASE
+// ==========================================
+const DEFAULT_ATHLETES = [
+  { id: 1, customId: "PLY-1001", name: "Tyson Ngo", tag: "TenZ", email: "tenz@sentinels.gg", game: "Valorant", mmr: 2920, wins: 48, losses: 8, avatar: "🥷" },
+  { id: 2, customId: "PLY-1002", name: "Oleksandr Kostyliev", tag: "S1mple", email: "s1mple@navi.gg", game: "CS2", mmr: 2890, wins: 52, losses: 9, avatar: "🎯" },
+  { id: 3, customId: "PLY-1003", name: "Lee Sang-hyeok", tag: "Faker", email: "faker@t1.gg", game: "Valorant", mmr: 2780, wins: 45, losses: 12, avatar: "🧙" },
+  { id: 4, customId: "PLY-1004", name: "Michael Grzesiek", tag: "Shroud", email: "shroud@gg.com", game: "CS2", mmr: 2650, wins: 42, losses: 14, avatar: "🎖️" },
+  { id: 5, customId: "PLY-1005", name: "Jonathan Amaral", tag: "Jonathan", email: "jonathan@godlike.gg", game: "BGMI", mmr: 2540, wins: 39, losses: 15, avatar: "⚡" },
+  { id: 6, customId: "PLY-1006", name: "Seth Abner", tag: "Scump", email: "scump@optic.gg", game: "Apex", mmr: 2420, wins: 36, losses: 18, avatar: "🤖" },
+  { id: 7, customId: "PLY-1007", name: "Adil Benrlitom", tag: "ScreaM", email: "scream@karmine.gg", game: "Valorant", mmr: 2350, wins: 34, losses: 17, avatar: "💀" },
+  { id: 8, customId: "PLY-1008", name: "Tanmay Singh", tag: "ScoutOP", email: "scout@x.gg", game: "BGMI", mmr: 2280, wins: 31, losses: 19, avatar: "🦅" },
+  { id: 9, customId: "PLY-1009", name: "Brandon Winn", tag: "Aceu", email: "aceu@pro.gg", game: "Apex", mmr: 2190, wins: 28, losses: 19, avatar: "🥷" },
+  { id: 10, customId: "PLY-1010", name: "Nikola Kovac", tag: "NiKo", email: "niko@g2.gg", game: "CS2", mmr: 2120, wins: 27, losses: 20, avatar: "🎯" },
+  { id: 11, customId: "PLY-1011", name: "Jake Howlett", tag: "Boaster", email: "boaster@fnatic.gg", game: "Valorant", mmr: 1980, wins: 24, losses: 21, avatar: "🧙" },
+  { id: 12, customId: "PLY-1012", name: "Naman Mathur", tag: "Mortal", email: "mortal@soul.gg", game: "BGMI", mmr: 1850, wins: 22, losses: 22, avatar: "⚡" },
+  { id: 13, customId: "PLY-1013", name: "Phillip Dosen", tag: "ImperialHal", email: "hal@tsm.gg", game: "Apex", mmr: 1720, wins: 19, losses: 23, avatar: "🤖" },
+  { id: 14, customId: "PLY-1014", name: "Nikita Sirmitev", tag: "Derke", email: "derke@fnatic.gg", game: "Valorant", mmr: 1640, wins: 17, losses: 24, avatar: "💀" },
+  { id: 15, customId: "PLY-1015", name: "Elena Rostova", tag: "ViperQueen", email: "elena@valk.gg", game: "Valorant", mmr: 1450, wins: 14, losses: 26, avatar: "🦅" },
+  { id: 16, customId: "PLY-1016", name: "Alex Chen", tag: "NovaRookie", email: "alex@rookie.gg", game: "CS2", mmr: 1280, wins: 11, losses: 28, avatar: "🎖️" }
+];
+
+let athletes = JSON.parse(localStorage.getItem('esports_athletes')) || [...DEFAULT_ATHLETES];
+
+function getTier(mmr) {
+  if (mmr >= 2800) return 'Radiant';
+  if (mmr >= 2400) return 'Immortal';
+  if (mmr >= 2000) return 'Diamond';
+  if (mmr >= 1600) return 'Platinum';
+  if (mmr >= 1200) return 'Gold';
+  return 'Silver';
+}
+
+function saveAthletes() {
+  localStorage.setItem('esports_athletes', JSON.stringify(athletes));
+  updateStats();
+  renderAthleteTable();
+  renderLeaderboard();
+  updateDropdowns();
+}
+
+// ==========================================
+// MODULE 1: FIFO QUEUE IMPLEMENTATION
+// ==========================================
+class FIFOQueue {
+  constructor() {
+    this.items = JSON.parse(localStorage.getItem('esports_fifo_queue')) || [];
+  }
+  enqueue(athlete) {
+    if (this.contains(athlete.id)) return false;
+    this.items.push({
+      ...athlete,
+      enqueuedAt: Date.now()
+    });
+    this.save();
+    return true;
+  }
+  dequeue() {
+    if (this.isEmpty()) return null;
+    const item = this.items.shift();
+    this.save();
+    return item;
+  }
+  remove(athleteId) {
+    const idx = this.items.findIndex(x => x.id === athleteId);
+    if (idx !== -1) {
+      const removed = this.items.splice(idx, 1)[0];
+      this.save();
+      return removed;
+    }
+    return null;
+  }
+  clear() {
+    this.items = [];
+    this.save();
+  }
+  size() { return this.items.length; }
+  isEmpty() { return this.items.length === 0; }
+  contains(id) { return this.items.some(x => x.id === id); }
+  save() { localStorage.setItem('esports_fifo_queue', JSON.stringify(this.items)); }
+}
+
+const fifoQueue = new FIFOQueue();
+
+function renderQueueTrack() {
+  const track = document.getElementById('queueTrack');
+  track.innerHTML = '';
+
+  if (fifoQueue.isEmpty()) {
+    track.innerHTML = '<div style="color: var(--text-subtle); text-align: center; width: 100%; padding: 20px;">Queue is currently empty. Click "+ Enqueue 4 Athletes" or select from directory below.</div>';
+    return;
+  }
+
+  const now = Date.now();
+  fifoQueue.items.forEach((item, idx) => {
+    const isFront = (idx === 0);
+    const isRear = (idx === fifoQueue.items.length - 1);
+    const waitSeconds = Math.max(0, Math.floor((now - item.enqueuedAt) / 1000));
+
+    const card = document.createElement('div');
+    card.className = `queue-card ${isFront ? 'is-front' : ''} ${isRear ? 'is-rear' : ''}`;
+    card.innerHTML = `
+      <div class="queue-pos-badge">POS #${idx + 1} ${isFront ? '★ FRONT' : (isRear ? '▲ REAR' : '')}</div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 1.4rem;">${item.avatar}</span>
+        <div>
+          <div class="tag">${item.tag}</div>
+          <div class="meta">${item.game} &bull; ${item.mmr} MMR</div>
+        </div>
+      </div>
+      <div class="wait-time">⏱️ Waited: ${waitSeconds}s</div>
+      <button class="btn btn-secondary btn-sm" style="margin-top: 8px; width: 100%; font-size: 0.7rem; padding: 2px;" onclick="cancelQueueItem(${item.id})">Cancel</button>
+    `;
+    track.appendChild(card);
+
+    if (idx < fifoQueue.items.length - 1) {
+      const arrow = document.createElement('div');
+      arrow.className = 'queue-arrow';
+      arrow.textContent = '➡️';
+      track.appendChild(arrow);
+    }
+  });
+}
+
+function cancelQueueItem(id) {
+  fifoQueue.remove(id);
+  sfx.playBeep(300, 'sine', 0.05);
+  renderQueueTrack();
+  updateStats();
+}
+
+// ==========================================
+// MODULE 2: BINARY MAX-HEAP IMPLEMENTATION
+// ==========================================
+class BinaryMaxHeap {
+  constructor() {
+    this.heap = JSON.parse(localStorage.getItem('esports_max_heap')) || [];
+    this.traceLog = [];
+  }
+
+  calculatePriority(item) {
+    const now = Date.now();
+    const joinedAt = item.heapJoinedAt || now;
+    const waitSeconds = Math.max(0, Math.floor((now - joinedAt) / 1000));
+    return Math.round(item.mmr + (waitSeconds * 1.5));
+  }
+
+  insert(athlete) {
+    if (this.contains(athlete.id)) return false;
+    const item = {
+      ...athlete,
+      heapJoinedAt: Date.now()
+    };
+    item.priorityScore = this.calculatePriority(item);
+    this.heap.push(item);
+    this.traceLog.push(`[INSERT] Added ${item.tag} at leaf index ${this.heap.length - 1} (Priority: ${item.priorityScore})`);
+    this.heapifyUp(this.heap.length - 1);
+    this.save();
+    return true;
+  }
+
+  heapifyUp(idx) {
+    while (idx > 0) {
+      const parent = Math.floor((idx - 1) / 2);
+      if (this.heap[idx].priorityScore > this.heap[parent].priorityScore) {
+        this.traceLog.push(`[SWAP-UP] Child ${this.heap[idx].tag} (${this.heap[idx].priorityScore}) > Parent ${this.heap[parent].tag} (${this.heap[parent].priorityScore}). Swapping index ${idx} with ${parent}.`);
+        [this.heap[idx], this.heap[parent]] = [this.heap[parent], this.heap[idx]];
+        idx = parent;
+      } else {
+        this.traceLog.push(`[HEAP-OK] Invariant satisfied at index ${idx}.`);
+        break;
+      }
+    }
+  }
+
+  extractMax() {
+    if (this.isEmpty()) return null;
+    if (this.heap.length === 1) {
+      const item = this.heap.pop();
+      this.traceLog.push(`[EXTRACT] Extracted only root element: ${item.tag}`);
+      this.save();
+      return item;
+    }
+    const maxItem = this.heap[0];
+    const last = this.heap.pop();
+    this.heap[0] = last;
+    this.traceLog.push(`[EXTRACT] Root ${maxItem.tag} removed. Moved leaf ${last.tag} to root (index 0).`);
+    this.heapifyDown(0);
+    this.save();
+    return maxItem;
+  }
+
+  heapifyDown(idx) {
+    const n = this.heap.length;
+    while (2 * idx + 1 < n) {
+      let largest = idx;
+      const left = 2 * idx + 1;
+      const right = 2 * idx + 2;
+
+      if (left < n && this.heap[left].priorityScore > this.heap[largest].priorityScore) {
+        largest = left;
+      }
+      if (right < n && this.heap[right].priorityScore > this.heap[largest].priorityScore) {
+        largest = right;
+      }
+
+      if (largest !== idx) {
+        this.traceLog.push(`[SWAP-DOWN] Child ${this.heap[largest].tag} (${this.heap[largest].priorityScore}) > Parent ${this.heap[idx].tag} (${this.heap[idx].priorityScore}). Swapping.`);
+        [this.heap[idx], this.heap[largest]] = [this.heap[largest], this.heap[idx]];
+        idx = largest;
+      } else {
+        this.traceLog.push(`[HEAP-OK] Invariant satisfied at index ${idx}.`);
+        break;
+      }
+    }
+  }
+
+  remove(id) {
+    const idx = this.heap.findIndex(x => x.id === id);
+    if (idx === -1) return null;
+    const removed = this.heap[idx];
+    if (idx === this.heap.length - 1) {
+      this.heap.pop();
+      this.save();
+      return removed;
+    }
+    const last = this.heap.pop();
+    this.heap[idx] = last;
+    this.traceLog.push(`[DELETE] Removed ${removed.tag} at index ${idx}. Replaced with ${last.tag}. Heapifying...`);
+    const parent = Math.floor((idx - 1) / 2);
+    if (idx > 0 && this.heap[idx].priorityScore > this.heap[parent].priorityScore) {
+      this.heapifyUp(idx);
+    } else {
+      this.heapifyDown(idx);
+    }
+    this.save();
+    return removed;
+  }
+
+  rebuild() {
+    this.traceLog.push(`[BUILD-HEAP] Running Floyd's bottom-up build on ${this.heap.length} nodes in O(n) time.`);
+    // Refresh priorities
+    this.heap.forEach(item => { item.priorityScore = this.calculatePriority(item); });
+    for (let i = Math.floor(this.heap.length / 2) - 1; i >= 0; i--) {
+      this.heapifyDown(i);
+    }
+    this.save();
+  }
+
+  clear() {
+    this.heap = [];
+    this.traceLog = [];
+    this.save();
+  }
+
+  size() { return this.heap.length; }
+  isEmpty() { return this.heap.length === 0; }
+  contains(id) { return this.heap.some(x => x.id === id); }
+  save() { localStorage.setItem('esports_max_heap', JSON.stringify(this.heap)); }
+}
+
+const maxHeap = new BinaryMaxHeap();
+
+// Dynamic SVG Tree Visualizer
+function renderHeapTree() {
+  const svg = document.getElementById('heapSvgCanvas');
+  svg.innerHTML = '';
+
+  if (maxHeap.isEmpty()) {
+    svg.innerHTML = '<text x="50%" y="50%" fill="#64748b" text-anchor="middle" font-size="14" font-family="Inter">Max Heap is currently empty. Insert athletes from above.</text>';
+    return;
+  }
+
+  const svgWidth = Math.max(760, window.innerWidth - 300);
+  const svgHeight = 360;
+  svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+
+  const n = maxHeap.heap.length;
+  const levelHeight = 75;
+  const nodeRadius = 24;
+
+  // Compute (x, y) coordinates for complete binary tree
+  const positions = [];
+  for (let i = 0; i < n; i++) {
+    const depth = Math.floor(Math.log2(i + 1));
+    const posInLevel = i - (Math.pow(2, depth) - 1);
+    const nodesInLevel = Math.pow(2, depth);
+    const x = ((posInLevel + 1) / (nodesInLevel + 1)) * svgWidth;
+    const y = 48 + depth * levelHeight;
+    positions.push({ x, y });
+  }
+
+  // Draw edges
+  for (let i = 0; i < n; i++) {
+    const left = 2 * i + 1;
+    const right = 2 * i + 2;
+    [left, right].forEach(child => {
+      if (child < n) {
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', positions[i].x);
+        line.setAttribute('y1', positions[i].y);
+        line.setAttribute('x2', positions[child].x);
+        line.setAttribute('y2', positions[child].y);
+        line.setAttribute('stroke', '#a855f7');
+        line.setAttribute('stroke-width', '2');
+        line.setAttribute('stroke-opacity', '0.6');
+        svg.appendChild(line);
+      }
+    });
+  }
+
+  // Draw nodes
+  for (let i = 0; i < n; i++) {
+    const p = positions[i];
+    const item = maxHeap.heap[i];
+    const isRoot = (i === 0);
+
+    const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    g.style.cursor = 'pointer';
+
+    // Circle
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', p.x);
+    circle.setAttribute('cy', p.y);
+    circle.setAttribute('r', nodeRadius);
+    circle.setAttribute('fill', isRoot ? '#1e1b4b' : '#0e1224');
+    circle.setAttribute('stroke', isRoot ? '#fbbf24' : '#a855f7');
+    circle.setAttribute('stroke-width', isRoot ? '3' : '2');
+    circle.setAttribute('filter', 'drop-shadow(0px 0px 8px rgba(168,85,247,0.5))');
+    g.appendChild(circle);
+
+    if (isRoot) {
+      const crown = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      crown.setAttribute('x', p.x);
+      crown.setAttribute('y', p.y - nodeRadius - 5);
+      crown.setAttribute('text-anchor', 'middle');
+      crown.setAttribute('font-size', '13');
+      crown.textContent = '👑';
+      g.appendChild(crown);
+    }
+
+    // Gamer Tag
+    const textTag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textTag.setAttribute('x', p.x);
+    textTag.setAttribute('y', p.y - 4);
+    textTag.setAttribute('text-anchor', 'middle');
+    textTag.setAttribute('fill', '#ffffff');
+    textTag.setAttribute('font-size', '10');
+    textTag.setAttribute('font-weight', 'bold');
+    textTag.textContent = item.tag.substring(0, 8);
+    g.appendChild(textTag);
+
+    // Priority Score
+    const textScore = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textScore.setAttribute('x', p.x);
+    textScore.setAttribute('y', p.y + 11);
+    textScore.setAttribute('text-anchor', 'middle');
+    textScore.setAttribute('fill', isRoot ? '#fbbf24' : '#00f0ff');
+    textScore.setAttribute('font-size', '9');
+    textScore.setAttribute('font-family', 'JetBrains Mono');
+    textScore.textContent = item.priorityScore;
+    g.appendChild(textScore);
+
+    // Index
+    const textIdx = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    textIdx.setAttribute('x', p.x);
+    textIdx.setAttribute('y', p.y - nodeRadius - 3);
+    textIdx.setAttribute('text-anchor', 'middle');
+    textIdx.setAttribute('fill', '#94a3b8');
+    textIdx.setAttribute('font-size', '8');
+    textIdx.setAttribute('font-family', 'JetBrains Mono');
+    textIdx.textContent = `[${i}]`;
+    g.appendChild(textIdx);
+
+    svg.appendChild(g);
+  }
+}
+
+function renderHeapArrayStrip() {
+  const strip = document.getElementById('heapArrayStrip');
+  strip.innerHTML = '';
+  if (maxHeap.isEmpty()) {
+    strip.innerHTML = '<span style="color: var(--text-subtle); font-size: 0.8rem;">Array is currently empty</span>';
+    return;
+  }
+  maxHeap.heap.forEach((item, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'array-cell';
+    cell.innerHTML = `
+      <div class="idx">INDEX [${idx}]</div>
+      <div class="val">${item.tag}</div>
+      <div class="score">${item.priorityScore}</div>
+    `;
+    strip.appendChild(cell);
+  });
+}
+
+function renderHeapTrace() {
+  const log = document.getElementById('heapTraceLog');
+  if (maxHeap.traceLog.length === 0) return;
+  log.innerHTML = '';
+  maxHeap.traceLog.slice(-15).forEach(t => {
+    const div = document.createElement('div');
+    div.className = `trace-item ${t.includes('SWAP') ? 'swap' : ''}`;
+    div.textContent = t;
+    log.appendChild(div);
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+// ==========================================
+// MODULE 3: MATCHES, TOURNAMENT & ELO SYSTEM
+// ==========================================
+let activeMatches = JSON.parse(localStorage.getItem('esports_active_matches')) || [];
+let matchHistory = JSON.parse(localStorage.getItem('esports_match_history')) || [];
+let currentTournament = JSON.parse(localStorage.getItem('esports_current_tourney')) || null;
+
+// Arpad Elo Formula (K=32)
+function calculateElo(rA, rB, scoreA) {
+  const eA = 1 / (1 + Math.pow(10, (rB - rA) / 400));
+  const deltaA = Math.round(32 * (scoreA - eA));
+  const deltaB = -deltaA;
+  return { deltaA, deltaB, probA: Math.round(eA * 100) };
+}
+
+function create1v1Match(p1, p2, type = '1v1 Match') {
+  const match = {
+    id: Math.floor(100 + Math.random() * 900),
+    type: type,
+    p1: p1,
+    p2: p2,
+    probA: calculateElo(p1.mmr, p2.mmr, 1).probA,
+    createdAt: Date.now()
+  };
+  activeMatches.unshift(match);
+  localStorage.setItem('esports_active_matches', JSON.stringify(activeMatches));
+  renderActiveMatches();
+  updateStats();
+  sfx.playSuccess();
+  showToast(`Match Created: ${p1.tag} vs ${p2.tag}!`, 'success');
+  showModule(3);
+}
+
+function simulate1v1Match(matchId) {
+  const idx = activeMatches.findIndex(m => m.id === matchId);
+  if (idx === -1) return;
+  const m = activeMatches[idx];
+
+  // Roll winner based on Elo probability
+  const p1Won = Math.random() * 100 < m.probA;
+  const p1Score = p1Won ? 13 : Math.floor(Math.random() * 8) + 4;
+  const p2Score = p1Won ? Math.floor(Math.random() * 8) + 4 : 13;
+
+  const { deltaA, deltaB } = calculateElo(m.p1.mmr, m.p2.mmr, p1Won ? 1 : 0);
+
+  // Update athlete stats
+  const athlete1 = athletes.find(a => a.id === m.p1.id);
+  const athlete2 = athletes.find(a => a.id === m.p2.id);
+
+  if (athlete1) {
+    athlete1.mmr = Math.max(100, athlete1.mmr + deltaA);
+    if (p1Won) athlete1.wins++; else athlete1.losses++;
+  }
+  if (athlete2) {
+    athlete2.mmr = Math.max(100, athlete2.mmr + deltaB);
+    if (!p1Won) athlete2.wins++; else athlete2.losses++;
+  }
+
+  saveAthletes();
+
+  // Record history
+  matchHistory.unshift({
+    id: m.id,
+    p1Tag: m.p1.tag,
+    p2Tag: m.p2.tag,
+    p1Score,
+    p2Score,
+    winnerTag: p1Won ? m.p1.tag : m.p2.tag,
+    eloChange: p1Won ? `+${deltaA}` : `+${deltaB}`
+  });
+  localStorage.setItem('esports_match_history', JSON.stringify(matchHistory));
+
+  activeMatches.splice(idx, 1);
+  localStorage.setItem('esports_active_matches', JSON.stringify(activeMatches));
+
+  sfx.playVictory();
+  showToast(`Match Resolved! Winner: ${p1Won ? m.p1.tag : m.p2.tag} (${p1Score} - ${p2Score})`, 'success');
+  renderActiveMatches();
+  renderLeaderboard();
+  updateStats();
+}
+
+function renderActiveMatches() {
+  const container = document.getElementById('activeMatchesGrid');
+  container.innerHTML = '';
+
+  if (activeMatches.length === 0) {
+    container.innerHTML = '<div style="color: var(--text-subtle); text-align: center; grid-column: 1/-1; padding: 24px;">No active matches. Trigger a FIFO or Heap match from Module 1 or Module 2!</div>';
+    return;
+  }
+
+  activeMatches.forEach(m => {
+    const card = document.createElement('div');
+    card.style.cssText = 'background: var(--bg-surface-elevated); border: 1px solid var(--border-cyan); border-radius: var(--radius-md); padding: 16px;';
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 10px;">
+        <span class="code-pill cyan">MATCH #${m.id}</span>
+        <span>${m.type}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; text-align: center;">
+        <div style="flex: 1;">
+          <div style="font-size: 2rem;">${m.p1.avatar}</div>
+          <div style="font-weight: 700; color: #fff;">${m.p1.tag}</div>
+          <div style="font-size: 0.75rem; color: var(--neon-cyan);">${m.p1.mmr} MMR</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">Win Prob: ${m.probA}%</div>
+        </div>
+        <div style="font-family: var(--font-heading); font-size: 1.4rem; color: var(--neon-purple); font-weight: 700; margin: 0 10px;">VS</div>
+        <div style="flex: 1;">
+          <div style="font-size: 2rem;">${m.p2.avatar}</div>
+          <div style="font-weight: 700; color: #fff;">${m.p2.tag}</div>
+          <div style="font-size: 0.75rem; color: var(--neon-cyan);">${m.p2.mmr} MMR</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted);">Win Prob: ${100 - m.probA}%</div>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="width: 100%; margin-top: 14px; justify-content: center;" onclick="simulate1v1Match(${m.id})">
+        ⚡ Auto-Simulate (Calculate Elo)
+      </button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+// ==========================================
+// TOURNAMENT BRACKET GENERATOR (8 PLAYERS)
+// ==========================================
+function generateTournament() {
+  // Pick top 8 players by MMR or Heap
+  const sorted = [...athletes].sort((a, b) => b.mmr - a.mmr).slice(0, 8);
+  if (sorted.length < 8) return showToast('Need at least 8 athletes to generate knockout bracket.', 'error');
+
+  currentTournament = {
+    id: Math.floor(100 + Math.random() * 900),
+    qf: [
+      { id: 1, p1: sorted[0], p2: sorted[7], winner: null, s1: '-', s2: '-' },
+      { id: 2, p1: sorted[1], p2: sorted[6], winner: null, s1: '-', s2: '-' },
+      { id: 3, p1: sorted[2], p2: sorted[5], winner: null, s1: '-', s2: '-' },
+      { id: 4, p1: sorted[3], p2: sorted[4], winner: null, s1: '-', s2: '-' }
+    ],
+    sf: [
+      { id: 5, p1: null, p2: null, winner: null, s1: '-', s2: '-' },
+      { id: 6, p1: null, p2: null, winner: null, s1: '-', s2: '-' }
+    ],
+    finals: [
+      { id: 7, p1: null, p2: null, winner: null, s1: '-', s2: '-' }
+    ],
+    champion: null
+  };
+
+  localStorage.setItem('esports_current_tourney', JSON.stringify(currentTournament));
+  sfx.playSuccess();
+  showToast('Generated 8-Player Knockout Tournament!', 'success');
+  renderTournamentBracket();
+}
+
+function playBracketMatch(round, matchIdx) {
+  const m = currentTournament[round][matchIdx];
+  if (!m || !m.p1 || !m.p2 || m.winner) return;
+
+  const p1Won = Math.random() < 0.5;
+  m.winner = p1Won ? m.p1 : m.p2;
+  m.s1 = p1Won ? 13 : Math.floor(Math.random() * 8) + 4;
+  m.s2 = p1Won ? Math.floor(Math.random() * 8) + 4 : 13;
+
+  // Advance winner
+  if (round === 'qf') {
+    if (matchIdx === 0) currentTournament.sf[0].p1 = m.winner;
+    if (matchIdx === 1) currentTournament.sf[0].p2 = m.winner;
+    if (matchIdx === 2) currentTournament.sf[1].p1 = m.winner;
+    if (matchIdx === 3) currentTournament.sf[1].p2 = m.winner;
+  } else if (round === 'sf') {
+    if (matchIdx === 0) currentTournament.finals[0].p1 = m.winner;
+    if (matchIdx === 1) currentTournament.finals[0].p2 = m.winner;
+  } else if (round === 'finals') {
+    currentTournament.champion = m.winner;
+    sfx.playVictory();
+    showToast(`🏆 CHAMPION CROWNED: ${m.winner.tag}!`, 'success');
+  }
+
+  localStorage.setItem('esports_current_tourney', JSON.stringify(currentTournament));
+  sfx.playSwap();
+  renderTournamentBracket();
+}
+
+function renderTournamentBracket() {
+  const container = document.getElementById('bracketContainer');
+  container.innerHTML = '';
+
+  if (!currentTournament) {
+    container.innerHTML = '<div style="color: var(--text-subtle); text-align: center; width: 100%; padding: 30px;">Click "Generate 8-Player Tournament" above to generate single-elimination bracket!</div>';
+    return;
+  }
+
+  const badge = document.getElementById('tourneyStatusBadge');
+  if (currentTournament.champion) {
+    badge.textContent = `👑 CHAMPION: ${currentTournament.champion.tag.toUpperCase()}`;
+    badge.className = 'code-pill green';
+  } else {
+    badge.textContent = 'KNOCKOUT IN PROGRESS';
+    badge.className = 'code-pill cyan';
+  }
+
+  // Round 1: Quarterfinals
+  const colQf = document.createElement('div');
+  colQf.className = 'bracket-col';
+  colQf.innerHTML = '<div class="bracket-round-title">Quarterfinals</div>';
+  currentTournament.qf.forEach((m, idx) => {
+    colQf.appendChild(createMatchBox(m, 'qf', idx));
+  });
+  container.appendChild(colQf);
+
+  // Round 2: Semifinals
+  const colSf = document.createElement('div');
+  colSf.className = 'bracket-col';
+  colSf.innerHTML = '<div class="bracket-round-title">Semifinals</div>';
+  currentTournament.sf.forEach((m, idx) => {
+    colSf.appendChild(createMatchBox(m, 'sf', idx));
+  });
+  container.appendChild(colSf);
+
+  // Round 3: Finals
+  const colF = document.createElement('div');
+  colF.className = 'bracket-col';
+  colF.innerHTML = '<div class="bracket-round-title">Grand Finals</div>';
+  currentTournament.finals.forEach((m, idx) => {
+    colF.appendChild(createMatchBox(m, 'finals', idx));
+  });
+  container.appendChild(colF);
+}
+
+function createMatchBox(m, round, idx) {
+  const box = document.createElement('div');
+  const isReady = m.p1 && m.p2 && !m.winner;
+  const isDone = !!m.winner;
+  box.className = `match-node ${isReady ? 'ready' : (isDone ? 'completed' : '')}`;
+
+  const p1Tag = m.p1 ? m.p1.tag : 'TBD';
+  const p2Tag = m.p2 ? m.p2.tag : 'TBD';
+  const p1Won = m.winner && m.winner.id === m.p1?.id;
+  const p2Won = m.winner && m.winner.id === m.p2?.id;
+
+  box.innerHTML = `
+    <div style="font-size: 0.68rem; color: var(--text-subtle); margin-bottom: 4px; font-family: var(--font-mono);">Match #${m.id}</div>
+    <div class="bracket-row ${p1Won ? 'winner' : ''}">
+      <span>${p1Tag}</span>
+      <span style="font-family: var(--font-mono);">${m.s1}</span>
+    </div>
+    <div class="bracket-row ${p2Won ? 'winner' : ''}">
+      <span>${p2Tag}</span>
+      <span style="font-family: var(--font-mono);">${m.s2}</span>
+    </div>
+    ${isReady ? `
+      <button class="btn btn-cyan btn-sm" style="width: 100%; margin-top: 6px; font-size: 0.7rem; padding: 2px;" onclick="playBracketMatch('${round}', ${idx})">
+        ⚔️ Play Match
+      </button>
+    ` : ''}
+  `;
+  return box;
+}
+
+// ==========================================
+// LEADERBOARD & PODIUM
+// ==========================================
+function renderLeaderboard() {
+  const gameFilter = document.getElementById('filterLeaderboardGame')?.value || 'ALL';
+  let list = [...athletes];
+  if (gameFilter !== 'ALL') list = list.filter(a => a.game === gameFilter);
+  list.sort((a, b) => b.mmr - a.mmr);
+
+  // Top 3 Podium
+  const podium = document.getElementById('leaderboardPodium');
+  if (list.length >= 3) {
+    const p1 = list[0], p2 = list[1], p3 = list[2];
+    podium.innerHTML = `
+      <div class="podium-col">
+        <div class="podium-card rank-2">
+          <div style="font-size: 2rem;">${p2.avatar}</div>
+          <div style="font-weight: 700; color: #fff;">${p2.tag}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${p2.game}</div>
+          <div style="color: var(--neon-cyan); font-weight: 700; margin-top: 4px;">${p2.mmr} MMR</div>
+        </div>
+        <div class="podium-step step-2">2ND</div>
+      </div>
+      <div class="podium-col">
+        <div style="font-size: 1.8rem; margin-bottom: -8px;">👑</div>
+        <div class="podium-card rank-1">
+          <div style="font-size: 2.2rem;">${p1.avatar}</div>
+          <div style="font-weight: 700; color: var(--neon-gold); font-size: 1.1rem;">${p1.tag}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${p1.game}</div>
+          <div style="color: var(--neon-gold); font-weight: 700; font-size: 1.1rem; margin-top: 4px;">${p1.mmr} MMR</div>
+        </div>
+        <div class="podium-step step-1">1ST</div>
+      </div>
+      <div class="podium-col">
+        <div class="podium-card rank-3">
+          <div style="font-size: 2rem;">${p3.avatar}</div>
+          <div style="font-weight: 700; color: #fff;">${p3.tag}</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">${p3.game}</div>
+          <div style="color: var(--neon-cyan); font-weight: 700; margin-top: 4px;">${p3.mmr} MMR</div>
+        </div>
+        <div class="podium-step step-3">3RD</div>
+      </div>
+    `;
+  }
+
+  // Table
+  const tbody = document.getElementById('leaderboardBody');
+  tbody.innerHTML = '';
+  list.forEach((p, idx) => {
+    const total = p.wins + p.losses;
+    const wr = total > 0 ? ((p.wins / total) * 100).toFixed(0) : 50;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight: 700; color: ${idx === 0 ? 'var(--neon-gold)' : (idx <= 2 ? '#fff' : 'var(--text-muted)')}; font-family: var(--font-mono);">
+        ${idx === 0 ? '🥇 #1' : (idx === 1 ? '🥈 #2' : (idx === 2 ? '🥉 #3' : `#${idx + 1}`))}
+      </td>
+      <td>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.2rem;">${p.avatar}</span>
+          <span style="font-weight: 700; color: #fff;">${p.tag}</span>
+        </div>
+      </td>
+      <td>${p.game}</td>
+      <td><span class="code-pill">${getTier(p.mmr)}</span></td>
+      <td><span style="font-family: var(--font-mono); font-weight: 700; color: var(--neon-cyan);">${p.mmr}</span></td>
+      <td>${total} (${p.wins}W / ${p.losses}L)</td>
+      <td>
+        <span style="font-family: var(--font-mono); color: var(--neon-green); font-weight: 600;">${wr}%</span>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// ==========================================
+// DIRECTORY TABLE & DROPDOWNS
+// ==========================================
+function renderAthleteTable() {
+  const search = document.getElementById('searchAthleteInput')?.value.trim().toLowerCase() || '';
+  const tbody = document.getElementById('athleteTableBody');
+  tbody.innerHTML = '';
+
+  let list = athletes;
+  if (search) {
+    list = list.filter(a => a.tag.toLowerCase().includes(search) || a.name.toLowerCase().includes(search) || a.customId.toLowerCase().includes(search));
+  }
+
+  list.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="code-pill cyan">${a.customId}</span></td>
+      <td>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span>${a.avatar}</span>
+          <div>
+            <div style="font-weight: 700; color: #fff;">${a.tag}</div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">${a.name}</div>
+          </div>
+        </div>
+      </td>
+      <td>${a.game}</td>
+      <td><span style="font-family: var(--font-mono); font-weight: 700; color: var(--neon-cyan);">${a.mmr}</span></td>
+      <td>${a.wins}W / ${a.losses}L</td>
+      <td>
+        <div style="display: flex; gap: 4px;">
+          <button class="btn btn-cyan btn-sm" onclick="enqueueById(${a.id})">+ FIFO</button>
+          <button class="btn btn-primary btn-sm" onclick="insertHeapById(${a.id})">+ Heap</button>
+        </div>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function enqueueById(id) {
+  const athlete = athletes.find(a => a.id === id);
+  if (!athlete) return;
+  if (fifoQueue.enqueue(athlete)) {
+    sfx.playSuccess();
+    showToast(`Enqueued ${athlete.tag} to FIFO Queue!`, 'success');
+    renderQueueTrack();
+    updateStats();
+  } else {
+    showToast(`${athlete.tag} is already in the FIFO Queue!`, 'error');
+  }
+}
+
+function insertHeapById(id) {
+  const athlete = athletes.find(a => a.id === id);
+  if (!athlete) return;
+  if (maxHeap.insert(athlete)) {
+    sfx.playSuccess();
+    showToast(`Inserted ${athlete.tag} into Max-Heap!`, 'success');
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderHeapTrace();
+    updateStats();
+    updateDropdowns();
+  } else {
+    showToast(`${athlete.tag} is already in the Max-Heap!`, 'error');
+  }
+}
+
+function updateDropdowns() {
+  const selectHeap = document.getElementById('selectInsertHeap');
+  const selectDel = document.getElementById('selectDeleteHeap');
+
+  if (selectHeap) {
+    selectHeap.innerHTML = '<option value="">-- Choose Athlete --</option>';
+    athletes.forEach(a => {
+      selectHeap.insertAdjacentHTML('beforeend', `<option value="${a.id}">${a.tag} (${a.game} - ${a.mmr} MMR)</option>`);
+    });
+  }
+
+  if (selectDel) {
+    selectDel.innerHTML = '<option value="">-- Select Heap Node --</option>';
+    maxHeap.heap.forEach((item, idx) => {
+      selectDel.insertAdjacentHTML('beforeend', `<option value="${item.id}">[Idx ${idx}] ${item.tag} (${item.priorityScore})</option>`);
+    });
+  }
+}
+
+function updateStats() {
+  document.getElementById('statAthletesCount').textContent = athletes.length;
+  document.getElementById('statQueueCount').textContent = fifoQueue.size();
+  document.getElementById('statHeapCount').textContent = maxHeap.size();
+  document.getElementById('statMatchesCount').textContent = matchHistory.length;
+
+  document.getElementById('navBadgeQueue').textContent = fifoQueue.size();
+  document.getElementById('navBadgeHeap').textContent = maxHeap.size();
+
+  // Top player
+  const sorted = [...athletes].sort((a, b) => b.mmr - a.mmr);
+  if (sorted.length > 0) {
+    document.getElementById('statTopPlayer').textContent = `${sorted[0].tag} (${sorted[0].mmr})`;
+  }
+}
+
+// ==========================================
+// EVENT LISTENERS & SETUP
+// ==========================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Sound toggle
+  document.getElementById('btnSoundToggle').addEventListener('click', (e) => {
+    soundEnabled = !soundEnabled;
+    e.target.textContent = soundEnabled ? '🔊 Sound ON' : '🔇 Sound OFF';
+  });
+
+  // Seed Athletes
+  document.getElementById('btnSeedAthletes').addEventListener('click', () => {
+    athletes = [...DEFAULT_ATHLETES];
+    saveAthletes();
+    sfx.playSuccess();
+    showToast('Loaded 16 Pro E-Sports Athletes!', 'success');
+  });
+
+  // Reset All
+  document.getElementById('btnResetAll').addEventListener('click', () => {
+    if (!confirm('Reset all queues, heaps, and matches to initial state?')) return;
+    localStorage.clear();
+    athletes = [...DEFAULT_ATHLETES];
+    fifoQueue.clear();
+    maxHeap.clear();
+    activeMatches = [];
+    matchHistory = [];
+    currentTournament = null;
+    saveAthletes();
+    renderQueueTrack();
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderActiveMatches();
+    renderTournamentBracket();
+    showToast('System reset to initial state!', 'info');
+  });
+
+  // Auto-Gen ID
+  document.getElementById('btnAutoGenId').addEventListener('click', () => {
+    document.getElementById('regPlayerId').value = `PLY-${Math.floor(1000 + Math.random() * 9000)}`;
+  });
+
+  // Range Slider MMR
+  const mmrSlider = document.getElementById('regMmr');
+  const mmrDisp = document.getElementById('regMmrDisplay');
+  mmrSlider.addEventListener('input', (e) => { mmrDisp.textContent = e.target.value; });
+
+  // Avatar Picker
+  document.querySelectorAll('.avatar-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.avatar-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+
+  // Register Athlete Form Submit
+  document.getElementById('formRegisterAthlete').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const customId = document.getElementById('regPlayerId').value.trim();
+    const name = document.getElementById('regName').value.trim();
+    const tag = document.getElementById('regTag').value.trim();
+    const email = document.getElementById('regEmail').value.trim();
+    const game = document.getElementById('regGame').value;
+    const mmr = parseInt(document.getElementById('regMmr').value);
+    const avatar = document.querySelector('.avatar-btn.selected')?.dataset.avatar || '🥷';
+
+    const newAthlete = {
+      id: Date.now(),
+      customId,
+      name,
+      tag,
+      email,
+      game,
+      mmr,
+      wins: 0,
+      losses: 0,
+      avatar
+    };
+
+    athletes.unshift(newAthlete);
+    saveAthletes();
+    enqueueById(newAthlete.id);
+    document.getElementById('formRegisterAthlete').reset();
+    document.getElementById('regPlayerId').value = `PLY-${Math.floor(1000 + Math.random() * 9000)}`;
+  });
+
+  // Module 1 FIFO Actions
+  document.getElementById('btnQuickEnqueue4').addEventListener('click', () => {
+    let added = 0;
+    for (const a of athletes) {
+      if (fifoQueue.enqueue(a)) added++;
+      if (added >= 4) break;
+    }
+    sfx.playSuccess();
+    showToast(`Enqueued ${added} athletes into FIFO Queue!`, 'success');
+    renderQueueTrack();
+    updateStats();
+  });
+
+  document.getElementById('btnFifoMatch1v1').addEventListener('click', () => {
+    if (fifoQueue.size() < 2) return showToast('At least 2 athletes needed in FIFO queue to create a match.', 'error');
+    const p1 = fifoQueue.dequeue();
+    const p2 = fifoQueue.dequeue();
+    renderQueueTrack();
+    create1v1Match(p1, p2, 'FIFO Casual 1v1');
+  });
+
+  document.getElementById('btnDequeueHead').addEventListener('click', () => {
+    if (fifoQueue.isEmpty()) return showToast('Queue is empty.', 'error');
+    const p = fifoQueue.dequeue();
+    sfx.playSwap();
+    showToast(`Dequeued Head Player: ${p.tag}`, 'info');
+    renderQueueTrack();
+    updateStats();
+  });
+
+  document.getElementById('btnClearQueue').addEventListener('click', () => {
+    fifoQueue.clear();
+    renderQueueTrack();
+    updateStats();
+    showToast('FIFO Queue cleared.', 'info');
+  });
+
+  // Module 2 Heap Actions
+  document.getElementById('btnDoInsertHeap').addEventListener('click', () => {
+    const id = parseInt(document.getElementById('selectInsertHeap').value);
+    if (!id) return showToast('Select an athlete to insert.', 'error');
+    insertHeapById(id);
+  });
+
+  document.getElementById('btnDoDeleteHeap').addEventListener('click', () => {
+    const id = parseInt(document.getElementById('selectDeleteHeap').value);
+    if (!id) return showToast('Select a node to delete.', 'error');
+    const removed = maxHeap.remove(id);
+    if (removed) {
+      sfx.playSwap();
+      showToast(`Deleted ${removed.tag} from Max-Heap!`, 'info');
+      renderHeapTree();
+      renderHeapArrayStrip();
+      renderHeapTrace();
+      updateStats();
+      updateDropdowns();
+    }
+  });
+
+  document.getElementById('btnExtractMax').addEventListener('click', () => {
+    if (maxHeap.isEmpty()) return showToast('Max-Heap is empty.', 'error');
+    const item = maxHeap.extractMax();
+    sfx.playVictory();
+    showToast(`Extracted Maximum Priority Player: ${item.tag} (Priority: ${item.priorityScore})`, 'success');
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderHeapTrace();
+    updateStats();
+    updateDropdowns();
+  });
+
+  document.getElementById('btnHeapMatchTop2').addEventListener('click', () => {
+    if (maxHeap.size() < 2) return showToast('Need at least 2 players in Max-Heap to create priority match.', 'error');
+    const p1 = maxHeap.extractMax();
+    const p2 = maxHeap.extractMax();
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderHeapTrace();
+    create1v1Match(p1, p2, 'Heap Priority 1v1');
+  });
+
+  document.getElementById('btnRebuildHeap').addEventListener('click', () => {
+    maxHeap.rebuild();
+    sfx.playSwap();
+    showToast('Rebuilt Max-Heap in O(n) time via Floyd\'s algorithm!', 'success');
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderHeapTrace();
+  });
+
+  document.getElementById('btnClearHeap').addEventListener('click', () => {
+    maxHeap.clear();
+    renderHeapTree();
+    renderHeapArrayStrip();
+    renderHeapTrace();
+    updateStats();
+    updateDropdowns();
+    showToast('Max-Heap cleared.', 'info');
+  });
+
+  // Module 3 Actions
+  document.getElementById('btnGenTournament').addEventListener('click', generateTournament);
+  document.getElementById('btnSimulateTournament').addEventListener('click', () => {
+    if (!currentTournament) generateTournament();
+    // Simulate QF
+    currentTournament.qf.forEach((_, idx) => playBracketMatch('qf', idx));
+    // Simulate SF
+    currentTournament.sf.forEach((_, idx) => playBracketMatch('sf', idx));
+    // Simulate Finals
+    playBracketMatch('finals', 0);
+  });
+
+  // Filters & Search
+  document.getElementById('searchAthleteInput')?.addEventListener('input', renderAthleteTable);
+  document.getElementById('filterLeaderboardGame')?.addEventListener('change', renderLeaderboard);
+
+  // Initial Auto-Gen ID
+  document.getElementById('regPlayerId').value = `PLY-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  // Initial Renders
+  updateStats();
+  renderAthleteTable();
+  renderQueueTrack();
+  renderHeapTree();
+  renderHeapArrayStrip();
+  renderActiveMatches();
+  renderTournamentBracket();
+  renderLeaderboard();
+  updateDropdowns();
+
+  // Tick wait times every 3 seconds
+  setInterval(() => {
+    renderQueueTrack();
+  }, 3000);
+});
+</script>
+</body>
+</html>
